@@ -2,6 +2,7 @@
 
 #include "Kite/EventLoop.hpp"
 #include "Kite/MqttClient.hpp"
+#include "Kite/Stdio.hpp"
 
 
 class MyClient : public Kite::MqttClient
@@ -18,7 +19,6 @@ protected:
     virtual void onMqttConnected() {
         fprintf(stderr, "omg MQTT is totally connected lol \n");
         subscribe("warf");
-        publish("warf", "blurp");
     }
     virtual void onDisconnected(SocketState state) {
         fprintf(stderr, "disconnected: %i %s \n", state, errorMessage().c_str());
@@ -26,10 +26,40 @@ protected:
     }
 };
 
+
+class Stdio : public Kite::Stdio
+{
+public:
+    Stdio (std::weak_ptr<Kite::EventLoop> ev, std::weak_ptr<MyClient> mc)
+        : Kite::Stdio(ev)
+        , mc(mc)
+    {
+    }
+private:
+    std::weak_ptr<MyClient> mc;
+    std::string lb;
+protected:
+    void onActivated(int) {
+        char c;
+        if (!getc(c)) {
+            evRemove(fileno(stdin));
+//            ev()->exit(0);
+            return;
+        }
+        if (c != '\n') {
+            lb.push_back(c);
+            return;
+        }
+        mc.lock()->publish("warf", lb);
+        lb.clear();
+    }
+};
+
 int main(int argc, char **argv)
 {
     std::shared_ptr<Kite::EventLoop> ev(new Kite::EventLoop);
     std::shared_ptr<MyClient>        client(new MyClient(ev));
+    std::shared_ptr<Stdio>           stdio(new Stdio(ev, client));
 
     client->setClientId(argv[1]);
     client->setCaFile("ca.crt");

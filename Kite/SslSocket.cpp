@@ -223,13 +223,13 @@ void SslSocket::connect(const std::string &hostname, int port)
     onConnected();
 }
 
-ssize_t SslSocket::write(const char *data, int len)
+int SslSocket::write(const char *data, int len)
 {
     return BIO_write(p->bio, data, len);
 
 }
 
-ssize_t SslSocket::read (char *data, int len)
+int SslSocket::read (char *data, int len)
 {
     return BIO_read(p->bio, data, len);
 }

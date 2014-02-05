@@ -97,7 +97,7 @@ struct Kite::MqttClientPrivate
         } while ((byte & 128) != 0);
         return len;
     }
-    int nextMessageId;
+    uint16_t nextMessageId;
 
     void onCONNACK (Frame &frame);
     void onPUBACK  (Frame &frame);
@@ -234,7 +234,7 @@ void MqttClient::publish(const std::string &topic, const std::string &message, i
 {
     Frame frame(Frame::PUBLISH, qos);
     frame.writeString(topic);
-    if (++p->nextMessageId == 0) p->nextMessageId = 1;
+    if (++(p->nextMessageId) == 0) p->nextMessageId = 1;
     frame.writeInt(p->nextMessageId);
     frame.writeRawData(message);
     frame.parcel(this);
@@ -243,7 +243,7 @@ void MqttClient::publish(const std::string &topic, const std::string &message, i
 void MqttClient::subscribe(const std::string &topic, int qos)
 {
     Frame frame(Frame::SUBSCRIBE, 1);
-    if (++p->nextMessageId == 0) p->nextMessageId = 1;
+    if (++(p->nextMessageId) == 0) p->nextMessageId = 1;
     frame.writeInt(p->nextMessageId);
     frame.writeString(topic);
     frame.writeByte(qos);
@@ -281,8 +281,8 @@ void MqttClientPrivate::onPUBLISH (Frame &frame)  {
         frame.writeInt(id);
         frame.parcel(p);
         p->flush();
-
     } else if (frame.qos == 2) {
+        std::cerr << "QOS2 not implemented\n";
         //TODO
     }
 
@@ -309,18 +309,18 @@ Frame::Frame(uint8_t header, const std::string &data)
 
 uint8_t Frame::readByte()
 {
-    char c = data.at(0);
+    uint8_t c = data[0];
     data.erase(0, 1);
     return c;
 }
 
 uint16_t Frame::readInt()
 {
-    char msb = data.at(0);
-    char lsb = data.at(1);
+    uint8_t msb = data[0];
+    uint8_t lsb = data[1];
     data.erase(0, 2);
     //TODO: this doesnt look right. will this convert to a wider type before shift?
-    return (msb << 8) + lsb;
+    return (msb << 8) | lsb;
 }
 
 std::string Frame::readString()

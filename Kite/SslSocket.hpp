@@ -33,8 +33,8 @@ namespace Kite {
         void connect(const std::string &hostname, int port);
         void disconnect();
 
-        ssize_t write(const char *data, int len);
-        ssize_t read (char *data, int len);
+        int write(const char *data, int len);
+        int read (char *data, int len);
         void flush();
 
         const std::string &errorMessage() const;

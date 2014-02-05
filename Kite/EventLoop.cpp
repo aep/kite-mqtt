@@ -13,7 +13,6 @@ Evented::Evented(std::weak_ptr<EventLoop> ev)
 
 Evented::~Evented()
 {
-
     auto ev = p_Ev.lock();
     auto it = ev->p_evs.begin();
     while (it != ev->p_evs.end()) {

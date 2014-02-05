@@ -4,8 +4,10 @@
 namespace Kite {
     class IO {
     public:
-        virtual ssize_t read(char *buf, int len) = 0;
-        virtual ssize_t write(const char *buf, int len) = 0;
+        virtual int read(char *buf, int len) = 0;
+        virtual int write(const char *buf, int len) = 0;
+
+        virtual inline bool getc(char &c) {return (read(&c, 1) == 1);}
     };
 };
 
